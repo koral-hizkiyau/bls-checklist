@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>בדיקת תיק ציוד BLS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF3F4; --surface:#FFFFFF; --ink:#12313A; --muted:#5B7480; --line:#D3DEE1;
+  --ok:#1B8057; --ok-bg:#E3F4EC; --warn:#9A5B00; --warn-bg:#FFF1D6; --bad:#B3321F; --bad-bg:#FCE7E3;
+  --head:#12313A; --head-ink:#FFFFFF;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1A1E; --surface:#16272D; --ink:#E6F0F2; --muted:#93AAB3; --line:#294049;
+    --ok:#4CC38A; --ok-bg:#12372A; --warn:#F2B454; --warn-bg:#3A2B0F; --bad:#FF8A78; --bad-bg:#3C1B16;
+    --head:#0A1316; --head-ink:#E6F0F2;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1A1E; --surface:#16272D; --ink:#E6F0F2; --muted:#93AAB3; --line:#294049;
+  --ok:#4CC38A; --ok-bg:#12372A; --warn:#F2B454; --warn-bg:#3A2B0F; --bad:#FF8A78; --bad-bg:#3C1B16;
+  --head:#0A1316; --head-ink:#E6F0F2;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Heebo",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;font-size:17px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--head);z-index:10}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--head);color:var(--head-ink);padding:14px 16px 12px}
+.wrap{max-width:720px;margin:0 auto}
+h1{margin:0 0 8px;font-size:22px;font-weight:800;letter-spacing:0}
+.bar{height:10px;border-radius:5px;background:rgba(255,255,255,.2);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:#5FD6A0;transition:width .25s}
+.stats{display:flex;justify-content:space-between;gap:8px;margin-top:6px;font-size:15px;font-weight:500}
+.tools{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+button{font:inherit;font-weight:500;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:9px 14px;cursor:pointer;min-height:44px}
+button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button:focus-visible,summary:focus-visible,input:focus-visible+.box{outline:3px solid #3B9BE0;outline-offset:2px}
+main{padding:0 12px 40px}
+details{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin:0 0 12px;overflow:hidden}
+summary{list-style:none;display:flex;align-items:center;gap:10px;padding:14px 14px;cursor:pointer;font-weight:700;font-size:18px}
+summary::-webkit-details-marker{display:none}
+summary .name{flex:1}
+summary .cnt{font-size:14px;font-weight:700;padding:2px 10px;border-radius:99px;background:var(--bg);color:var(--muted)}
+summary .cnt.done{background:var(--ok-bg);color:var(--ok)}
+summary .chev{width:10px;height:10px;border-inline-end:2.5px solid var(--muted);border-bottom:2.5px solid var(--muted);transform:rotate(45deg);transition:transform .15s;margin-inline-start:4px}
+details[open] summary .chev{transform:rotate(-135deg)}
+.sec-actions{padding:0 14px 8px}
+.sec-actions button{font-size:14px;min-height:38px;padding:5px 12px}
+ul{list-style:none;margin:0;padding:0}
+li{border-top:1px solid var(--line);display:flex;align-items:center}
+label{display:flex;flex:1;min-width:0;align-items:center;gap:12px;padding:12px 14px;cursor:pointer}
+label input{position:absolute;opacity:0;width:1px;height:1px}
+.box{flex:none;width:30px;height:30px;border-radius:8px;border:2.5px solid var(--muted);display:grid;place-items:center;transition:background .12s,border-color .12s}
+.box svg{width:18px;height:18px;stroke:#fff;stroke-width:3.5;fill:none;stroke-linecap:round;stroke-linejoin:round;opacity:0}
+input:checked+.box{background:var(--ok);border-color:var(--ok)}
+input:checked+.box svg{opacity:1}
+.txt{flex:1;min-width:0}
+.txt small{display:block;color:var(--warn);font-size:13.5px;font-weight:500}
+li.on .txt>span{color:var(--muted);text-decoration:line-through;text-decoration-thickness:1.5px}
+.qty{flex:none;min-width:48px;text-align:center;font-weight:800;font-size:16px;padding:3px 10px;border-radius:8px;background:var(--bg);direction:ltr}
+li.on .qty{background:var(--ok-bg);color:var(--ok)}
+.result{display:none;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:4px}
+.result.show{display:block}
+.result h2{margin:0 0 6px;font-size:18px}
+.result.full{background:var(--ok-bg);border-color:var(--ok)}
+.result ul li{border:0;padding:3px 0;color:var(--bad)}
+.empty{padding:14px;color:var(--muted)}
+.step{flex:none;display:flex;align-items:center;gap:4px;direction:ltr;margin-inline-end:12px}
+.step button{min-height:40px;width:40px;padding:0;font-size:22px;font-weight:700;border-radius:10px;line-height:1}
+.step output{min-width:44px;text-align:center;font-weight:800;font-size:16px}
+li.part .step output{color:var(--warn)}
+li.part .box{border-color:var(--warn);background:var(--warn-bg)}
+li .qty{margin-inline-end:14px}
+li.part .txt>span{color:var(--ink)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#12313A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="תיק BLS">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png" type="image/png">
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>בדיקת תיק ציוד BLS</h1>
+    <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="pb"><i id="fill"></i></div>
+    <div class="stats"><span id="s1">0 מתוך 0 פריטים</span><span id="s2"></span></div>
+  </div>
+</header>
+<div class="wrap">
+  <div class="tools" style="padding:0 12px">
+    <button id="onlyMissing" aria-pressed="false">הצג רק מה שחסר</button>
+    <button id="copy">העתק רשימת חוסרים</button>
+    <button id="reset">נקה הכול</button>
+  </div>
+  <main>
+    <div id="list"></div>
+    <div class="result" id="result" aria-live="polite"></div>
+  </main>
+</div>
+<script>
+var DATA=[
+{t:"ערכת הנשמה למבוגר",i:[
+ [1,"מפוח הנשמה למבוגר"],[1,"מסכת הנשמה מס׳ 2"],[1,"מסכת הנשמה מס׳ 5"],[1,"שקית להעשרת חמצן"],[1,"מסנן ויראלי למבוגר"],
+ [1,"מנתב אוויר מס׳ 1"],[1,"מנתב אוויר מס׳ 2"],[1,"מנתב אוויר מס׳ 3"],[1,"מנתב אוויר מס׳ 4"]]},
+{t:"ערכת הנשמה לילד / תינוק",i:[
+ [1,"מפוח הנשמה מס׳ 0"],[1,"ערכת הנשמה ילד / תינוק"],[1,"צינור / שקית להעשרת חמצן"],[1,"מסנן ויראלי לילד"],
+ [1,"מנתב אוויר מס׳ 00"],[1,"מנתב אוויר מס׳ 0"],[1,"שרוול לחץ דם לילד"]]},
+{t:"ערכת סקשן",i:[
+ [1,"מכשיר שאיבת הפרשות"],[2,"קטטר שאיבה מס׳ 18"],[2,"קטטר שאיבה מס׳ 8"],[1,"קטטר שאיבה מס׳ 6"]]},
+{t:"ערכת עירוי",i:[
+ [1,"ערכת עירוי",1],[1,"פח לפסולת זיהומית דוקרת"]]},
+{t:"ערכת ציוד נלווה",i:[
+ [1,"מכשיר למדידת סוכר בדם"],[5,"מקלות למדידת סוכר בדם"],[5,"דוקרן למדידת סוכר בדם"],[5,"ספונג׳טות"],
+ [10,"אגד מדבק (פלסטר)"],[2,"שפופרת גלוקוג׳ל",1],[["5–10"],"טבליות אספירין",1],
+ [1,"מזרק אפיפן לילד 0.15 mg"],[1,"מזרק אפיפן למבוגר 0.3 mg"]]},
+{t:"ערכת חבישה ועצירת דימומים",i:[
+ [1,"מספריים לחיתוך עם כפתור"],[2,"חסם עורקים מתקדם"],[10,"אגד מדבק (פלסטר)"],[10,"פד גזה סטרילי"],
+ [5,"תחבושת אישית (ת.א)"],[2,"תחבושת בינונית (ת.ב)"],[5,"משולש בד"],[1,"פולידין נוזלי"],
+ [1,"איספלנית ניילון (מיקרופור)"],[1,"תחבושת המוסטטית AXIOSTAT"],[1,"אגד אלסטי מדבק"],
+ [1,"קלודין (תמיסה לחיטוי)"],[1,"חבישת חזה אוטמת"]]},
+{t:"כיס קדמי גדול",i:[
+ [1,"דפיברילטור חצי אוטומט"],[1,"מדבקות רזרביות לדפיברילציה"],[1,"מכשיר גילוח חד פעמי"]]},
+{t:"כיסי צד / כיס קדמי קטן",i:[
+ [1,"מד לחץ דם"],[1,"סטטוסקופ"],[2,"שקית לאיסוף כיח והקאה"],[5,"כפפות"],[1,"סד לקיבוע"]]}
+];
+var KEY="bls-checklist-v2", state=null, onlyMissing=false, old={};
+try{state=JSON.parse(localStorage.getItem(KEY)||"null")}catch(e){state=null}
+if(!state){state={};try{old=JSON.parse(localStorage.getItem("bls-checklist-v1")||"{}")||{}}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+var items=[];
+DATA.forEach(function(s,si){s.i.forEach(function(it,ii){
+  items.push({id:si+"-"+ii,sec:si,qty:Array.isArray(it[0])?5:it[0],max:Array.isArray(it[0])?10:it[0],lbl:Array.isArray(it[0])?it[0][0]:it[0],name:it[1],date:!!it[2]});
+});});
+items.forEach(function(x){if(old[x.id])state[x.id]=x.qty});
+if(Object.keys(old).length)save();
+function got(x){return state[x.id]||0}
+function isOk(x){return got(x)>=x.qty}
+var openSecs={};
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function render(){
+  var list=document.getElementById("list"),h="";
+  DATA.forEach(function(s,si){
+    var its=items.filter(function(x){return x.sec===si});
+    var done=its.filter(isOk).length;
+    var shown=onlyMissing?its.filter(function(x){return !isOk(x)}):its;
+    var isOpen=openSecs[si]===undefined?true:openSecs[si];
+    h+='<details data-s="'+si+'"'+(isOpen?' open':'')+'><summary><span class="name">'+esc(s.t)+'</span><span class="cnt'+(done===its.length?' done':'')+'">'+done+'/'+its.length+'</span><span class="chev"></span></summary>';
+    h+='<div class="sec-actions"><button data-all="'+si+'">'+(done===its.length?'בטל סימון לכל הפריטים':'סמן את כל הפריטים')+'</button></div><ul>';
+    if(!shown.length)h+='<li class="empty">הכול במקום בקבוצה הזו.</li>';
+    shown.forEach(function(x){
+      var g=got(x),on=g>=x.qty,part=g>0&&!on;
+      h+='<li class="'+(on?'on':part?'part':'')+'"><label><input type="checkbox" data-id="'+x.id+'"'+(on?' checked':'')+'><span class="box"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="txt"><span>'+esc(x.name)+'</span>'+(part?'<small>נמצאו '+g+' מתוך '+x.lbl+'</small>':'')+(x.date?'<small>לבדוק תאריך תוקף</small>':'')+'</span></label>'+(x.qty>1?'<span class="step"><button data-d="-1" data-id="'+x.id+'" aria-label="הורד כמות: '+esc(x.name)+'">−</button><output>'+g+'/'+x.lbl+'</output><button data-d="1" data-id="'+x.id+'" aria-label="הוסף כמות: '+esc(x.name)+'">+</button></span>':'<span class="qty">×1</span>')+'</li>';
+    });
+    h+='</ul></details>';
+  });
+  list.innerHTML=h;
+  update();
+}
+function update(){
+  var total=items.length,n=items.filter(isOk).length,pct=Math.round(n/total*100);
+  document.getElementById("fill").style.width=pct+"%";
+  document.getElementById("pb").setAttribute("aria-valuenow",pct);
+  document.getElementById("s1").textContent=n+" מתוך "+total+" פריטים";
+  document.getElementById("s2").textContent=n===total?"הכול במקום":"חסרים "+(total-n);
+  var r=document.getElementById("result"),miss=items.filter(function(x){return !isOk(x)});
+  if(n===total){r.className="result show full";r.innerHTML="<h2>התיק מלא</h2>כל הפריטים סומנו כנמצאים.";}
+  else if(items.some(function(x){return got(x)>0})){r.className="result show";r.innerHTML="<h2>חסרים "+miss.length+" פריטים</h2><ul>"+miss.map(function(x){return"<li>"+esc(x.name)+" – "+(got(x)?"נמצאו "+got(x)+" מתוך "+x.lbl:"חסר ("+x.lbl+")")+"</li>"}).join("")+"</ul>";}
+  else r.className="result";
+}
+document.getElementById("list").addEventListener("change",function(e){
+  var id=e.target.getAttribute("data-id");if(!id)return;
+  var it=items.filter(function(x){return x.id===id})[0];if(e.target.checked)state[id]=it.qty;else delete state[id];
+  save();
+  var y=window.scrollY;render();window.scrollTo(0,y);
+});
+document.getElementById("list").addEventListener("click",function(e){
+  var d=e.target.closest("[data-d]");
+  if(d){var id=d.getAttribute("data-id"),it=items.filter(function(x){return x.id===id})[0],v=(state[id]||0)+ +d.getAttribute("data-d");v=Math.max(0,Math.min(it.max,v));if(v)state[id]=v;else delete state[id];save();var y0=window.scrollY;render();window.scrollTo(0,y0);return;}
+  var a=e.target.closest("[data-all]");
+  if(a){
+    var si=+a.getAttribute("data-all"),its=items.filter(function(x){return x.sec===si});
+    var all=its.every(isOk);
+    its.forEach(function(x){if(all)delete state[x.id];else state[x.id]=x.qty});
+    save();var y=window.scrollY;render();window.scrollTo(0,y);
+  }
+});
+document.getElementById("list").addEventListener("toggle",function(e){
+  var s=e.target.getAttribute&&e.target.getAttribute("data-s");
+  if(s!==null&&s!==undefined)openSecs[s]=e.target.open;
+},true);
+document.getElementById("onlyMissing").addEventListener("click",function(){
+  onlyMissing=!onlyMissing;this.setAttribute("aria-pressed",onlyMissing);render();
+});
+document.getElementById("reset").addEventListener("click",function(){
+  if(confirm("לנקות את כל הסימונים?")){state={};save();render();}
+});
+document.getElementById("copy").addEventListener("click",function(){
+  var btn=this,miss=items.filter(function(x){return !isOk(x)});
+  var txt=miss.length?"חסר בתיק BLS:\n"+miss.map(function(x){return"• "+x.name+" – "+(got(x)?"נמצאו "+got(x)+" מתוך "+x.lbl:"חסר ("+x.lbl+")")}).join("\n"):"התיק מלא – אין חוסרים.";
+  function done(){btn.textContent="הועתק";setTimeout(function(){btn.textContent="העתק רשימת חוסרים"},1500)}
+  try{navigator.clipboard.writeText(txt).then(done,function(){prompt("העתק ידנית:",txt)})}catch(e){prompt("העתק ידנית:",txt)}
+});
+render();
+if('serviceWorker' in navigator){window.addEventListener('load',function(){try{navigator.serviceWorker.register('sw.js').catch(function(){})}catch(e){}})}
+</script>
+</body>
+</html>
